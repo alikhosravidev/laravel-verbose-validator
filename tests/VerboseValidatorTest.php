@@ -27,7 +27,10 @@ class VerboseValidatorTest extends TestCase
 
     public function testReportIsEmptyWhenVerboseModeIsNotEnabled()
     {
-        $validator = $this->makeValidator(['name' => 'Taylor'], ['name' => 'required']);
+        $validator = $this->makeValidator(
+            ['name' => 'Taylor'],
+            ['name' => 'required']
+        );
 
         $validator->passes();
 
@@ -83,7 +86,8 @@ class VerboseValidatorTest extends TestCase
 
     public function testReportWorksWithCustomRuleObjects()
     {
-        $customRule = new class implements Rule{
+        $customRule = new class implements Rule
+        {
             public function passes($attribute, $value)
             {
                 return $value === 'laravel';
