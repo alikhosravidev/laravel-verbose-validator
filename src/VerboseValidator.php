@@ -6,7 +6,7 @@ use Illuminate\Validation\InvokableValidationRule;
 use Illuminate\Validation\ValidationRuleParser;
 use Illuminate\Validation\Validator as BaseValidator;
 
-class   VerboseValidator extends BaseValidator
+class VerboseValidator extends BaseValidator
 {
     /** @var bool */
     protected $verbose = false;
@@ -121,5 +121,4 @@ class   VerboseValidator extends BaseValidator
             'result' => $result,
         ];
     }
-
 }
