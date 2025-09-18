@@ -9,7 +9,7 @@ This package adds a "verbose" or "trace" mode to Laravel's `Validator` class to 
 
 -----
 
-## The Problem
+## 🤔 The Problem
 
 Sometimes, especially with complex forms, all you get from a failed validation is a generic error message. For example:
 
@@ -23,7 +23,7 @@ $data = ['password' => '12345'];
 
 -----
 
-## The Solution with Verbose Validator
+## ✅ The Solution with Verbose Validator
 
 This package allows you to get a detailed report of each validation step:
 
@@ -49,7 +49,7 @@ if ($validator->fails()) {
 
 -----
 
-## Installation
+## 🚀 Installation
 
 You can install the package via Composer:
 
@@ -61,7 +61,7 @@ The package supports Laravel's auto-discovery, so you don't need to manually reg
 
 -----
 
-## Usage
+## 📖 Usage
 
 Using the package is straightforward. Simply chain the `->verbose()` method onto your `Validator::make()` call.
 
@@ -98,7 +98,7 @@ The `getReport()` method returns an array containing all validation steps. Each 
 
 -----
 
-## Testing
+## 🧪 Testing
 
 The package is fully tested. To run the tests locally:
 
@@ -108,12 +108,12 @@ composer test
 
 -----
 
-## Contributing
+## 🙌 Contributing
 
 Contributions are welcome\! Please feel free to submit a pull request or open an issue.
 
 -----
 
-## License
+## 📄 License
 
 The MIT License (MIT). Please see the [License File](LICENSE.md) for more information.
