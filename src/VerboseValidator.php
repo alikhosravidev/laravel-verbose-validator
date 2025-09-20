@@ -29,13 +29,45 @@ class VerboseValidator extends BaseValidator
     }
 
     /**
-     * Get the detailed validation report.
+     * Get the validation report.
      *
+     * @param  string  $filter  ('all', 'failed', 'passed')
      * @return array
      */
-    public function getReport()
+    public function getReport(string $filter = 'all')
     {
-        return $this->report;
+        $report = $this->report ?? [];
+
+        if ($filter === 'all') {
+            return $report;
+        }
+
+        $filteredReport = [];
+
+        foreach ($report as $attribute => $rules) {
+            $filteredRules = array_filter($rules, function ($rule) use ($filter) {
+                $result = $rule['result'];
+
+                return ($filter === 'failed' && $result === false) ||
+                    ($filter === 'passed' && $result === true);
+            });
+
+            if (! empty($filteredRules)) {
+                $filteredReport[$attribute] = array_values($filteredRules);
+            }
+        }
+
+        return $filteredReport;
+    }
+
+    public function getFailedReport()
+    {
+        return $this->getReport('failed');
+    }
+
+    public function getPassedReport()
+    {
+        return $this->getReport('passed');
     }
 
     /**
