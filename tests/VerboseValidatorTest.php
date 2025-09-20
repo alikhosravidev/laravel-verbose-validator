@@ -46,42 +46,52 @@ class VerboseValidatorTest extends TestCase
 
         $this->assertTrue($validator->passes());
 
-        $report = $validator->getReport();
+        $allReport = $validator->getReport();
 
-        $this->assertArrayHasKey('name', $report);
-        $this->assertArrayHasKey('email', $report);
+        $this->assertArrayHasKey('name', $allReport);
+        $this->assertArrayHasKey('email', $allReport);
 
-        $this->assertEquals('Required', $report['name'][0]['rule']);
-        $this->assertTrue($report['name'][0]['result']);
-        $this->assertEquals('String', $report['name'][1]['rule']);
-        $this->assertTrue($report['name'][1]['result']);
+        $this->assertEquals('Required', $allReport['name'][0]['rule']);
+        $this->assertTrue($allReport['name'][0]['result']);
+        $this->assertEquals('String', $allReport['name'][1]['rule']);
+        $this->assertTrue($allReport['name'][1]['result']);
 
-        $this->assertEquals('Required', $report['email'][0]['rule']);
-        $this->assertTrue($report['email'][0]['result']);
-        $this->assertEquals('Email', $report['email'][1]['rule']);
-        $this->assertTrue($report['email'][1]['result']);
+        $this->assertEquals('Required', $allReport['email'][0]['rule']);
+        $this->assertTrue($allReport['email'][0]['result']);
+        $this->assertEquals('Email', $allReport['email'][1]['rule']);
+        $this->assertTrue($allReport['email'][1]['result']);
+
+        $this->assertEmpty($validator->getFailedReport());
+        $this->assertEquals($allReport, $validator->getPassedReport());
     }
 
     public function testReportCapturesFailedValidationSteps()
     {
+        $key = 'password';
         $validator = $this->makeValidator(
-            ['password' => '123'],
-            ['password' => 'required|min:8']
+            [$key => '123'],
+            [$key => 'required|min:8']
         )->verbose();
 
         $this->assertTrue($validator->fails());
 
-        $report = $validator->getReport();
+        $allReport = $validator->getReport();
+        $passedReport = $validator->getPassedReport();
+        $failedReport = $validator->getFailedReport();
 
-        $this->assertArrayHasKey('password', $report);
+        $this->assertArrayHasKey($key, $allReport);
+        $this->assertCount(2, $allReport[$key]);
+        $this->assertCount(1, $passedReport[$key]);
+        $this->assertCount(1, $failedReport[$key]);
+        $this->assertNotEquals($passedReport[$key], $failedReport[$key]);
 
-        $this->assertEquals('Required', $report['password'][0]['rule']);
-        $this->assertEquals('123', $report['password'][0]['value']);
-        $this->assertTrue($report['password'][0]['result']);
+        $this->assertEquals('Required', $passedReport[$key][0]['rule']);
+        $this->assertEquals('123', $passedReport[$key][0]['value']);
+        $this->assertTrue($passedReport[$key][0]['result']);
 
-        $this->assertEquals('Min', $report['password'][1]['rule']);
-        $this->assertEquals(['8'], $report['password'][1]['parameters']);
-        $this->assertFalse($report['password'][1]['result']);
+        $this->assertEquals('Min', $failedReport[$key][0]['rule']);
+        $this->assertEquals(['8'], $failedReport[$key][0]['parameters']);
+        $this->assertFalse($failedReport[$key][0]['result']);
     }
 
     public function testReportWorksWithCustomRuleObjects()
@@ -122,6 +132,8 @@ class VerboseValidatorTest extends TestCase
         $report1 = $validator->getReport();
         $this->assertCount(1, $report1['name']);
         $this->assertFalse($report1['name'][0]['result']);
+        $this->assertEmpty($validator->getPassedReport());
+        $this->assertEquals($report1, $validator->getFailedReport());
 
         $validator->setData(['name' => 'Correct']);
         $validator->passes();
@@ -129,5 +141,8 @@ class VerboseValidatorTest extends TestCase
 
         $this->assertCount(1, $report2['name']);
         $this->assertTrue($report2['name'][0]['result']);
+
+        $this->assertEmpty($validator->getFailedReport());
+        $this->assertEquals($report2, $validator->getPassedReport());
     }
 }
