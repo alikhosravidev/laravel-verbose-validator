@@ -1,69 +1,65 @@
 # Laravel Verbose Validator
 
-[](https://www.google.com/search?q=https://packagist.org/packages/alikhosravidev/laravel-verbose-validator)
-[](https://www.google.com/search?q=https://packagist.org/packages/alikhosravidev/laravel-verbose-validator)
-[](https://www.google.com/search?q=https://github.com/alikhosravidev/laravel-verbose-validator/actions)
-[](https://www.google.com/search?q=https://github.com/alikhosravidev/laravel-verbose-validator/blob/main/LICENSE.md)
+[](https://packagist.org/packages/alikhosravidev/laravel-verbose-validator)
+[](https://github.com/alikhosravidev/laravel-verbose-validator/actions)
+[](https://github.com/alikhosravidev/laravel-verbose-validator/blob/main/LICENSE.md)
 
 This package adds a "verbose" or "trace" mode to Laravel's `Validator` class to simplify debugging complex validation rules. Stop guessing why a rule failed; with this package, you can get a complete, step-by-step report of every rule executed and its outcome.
 
------
+---
 
-## 🤔 The Problem
+## 🎯 Compatibility
 
-Sometimes, especially with complex forms, all you get from a failed validation is a generic error message. For example:
+This package is compatible with Laravel versions **8, 9, 10, 11, and 12**.
 
-```php
-$rules = ['password' => 'required|min:8|regex:/[A-Z]/'];
-$data = ['password' => '12345'];
-
-// Result: "The password must be at least 8 characters."
-// But was the regex rule even checked? What was its result?
-```
-
------
-
-## ✅ The Solution with Verbose Validator
-
-This package allows you to get a detailed report of each validation step:
-
-```php
-use Illuminate\Support\Facades\Validator;
-
-$validator = Validator::make($data, $rules)->verbose();
-
-if ($validator->fails()) {
-    $report = $validator->getReport();
-    /*
-    $report = [
-        "password" => [
-            ["rule" => "Required", "parameters" => [], "value" => "12345", "result" => true],
-            ["rule" => "Min", "parameters" => ["8"], "value" => "12345", "result" => false],
-            // The regex rule is not executed due to the default "bail" behavior on the first failure.
-        ]
-    ]
-    */
-    dd($report);
-}
-```
-
------
+---
 
 ## 🚀 Installation
 
-You can install the package via Composer:
+Install via Composer. Since this package is primarily for development, it's recommended to install it as a dev dependency (`--dev`):
 
 ```bash
-composer require alikhosravidev/laravel-verbose-validator
+composer require alikhosravidev/laravel-verbose-validator --dev
 ```
 
 The package supports Laravel's auto-discovery, so you don't need to manually register the ServiceProvider.
 
------
+---
+
+## ⚙️ Configuration (Optional)
+
+You can publish the configuration file with the following command:
+
+```bash
+php artisan vendor:publish --provider="Alikhosravidev\VerboseValidator\VerboseValidatorServiceProvider"
+```
+
+This will create a `verbose-validator.php` file in your `config` directory.
+
+**Automatic Verbose Mode:**
+
+Verbose mode is controlled by the following setting:
+
+```php
+'enabled' => env('VERBOSE_VALIDATOR_ENABLED', env('APP_DEBUG', false)),
+
+// Determines which type of report should be attached on failed validation ('failed', 'passed', or 'all')
+'failure_report_type' => env('VERBOSE_VALIDATOR_FAILURE_REPORT', 'failed'),
+```
+
+* If `APP_DEBUG=true`, verbose mode is enabled by default.
+* If `APP_DEBUG=false`, verbose mode is disabled.
+* You can override this behavior with `VERBOSE_VALIDATOR_ENABLED`.
+* On failed validation, by default only the **failed rules** will be attached to the response.
+* You can change this to `'all'` or `'passed'` in the config.
+
+---
 
 ## 📖 Usage
 
-Using the package is straightforward. Simply chain the `->verbose()` method onto your `Validator::make()` call.
+### Basic Usage
+
+Simply chain the `->verbose()` method onto your `Validator::make()` call (unless automatic mode is enabled):
 
 ```php
 use Illuminate\Support\Facades\Validator;
@@ -72,47 +68,104 @@ $data = [
     'email' => 'test@example.com',
     'password' => '123',
 ];
-
 $rules = [
     'email' => 'required|email',
     'password' => 'required|min:8',
 ];
 
-// Add the verbose() method here
 $validator = Validator::make($data, $rules)->verbose();
 
 if ($validator->fails()) {
-    // Get the full report for debugging
-    $report = $validator->getReport();
-    
+    $report = $validator->getReport(); // full report
     dd($report);
 }
 ```
 
-The `getReport()` method returns an array containing all validation steps. Each step includes the following information:
+---
 
-- **`rule`**: The name of the rule that was executed.
-- **`parameters`**: The parameters passed to the rule.
-- **`value`**: The value that was tested against the rule.
-- **`result`**: The outcome of the rule execution (`true` for pass, `false` for fail).
+### Filtering Reports
 
------
+The `getReport()` method accepts a filter argument:
+
+```php
+$validator->getReport('all');    // default, all rules
+$validator->getReport('failed'); // only failed rules
+$validator->getReport('passed'); // only passed rules
+```
+
+For convenience, you can also call:
+
+* `getFailedReport()` → Equivalent to `getReport('failed')`
+* `getPassedReport()` → Equivalent to `getReport('passed')`
+
+---
+
+### Reports in Validation Failures
+
+When validation fails, Laravel throws a `ValidationException`.
+This package automatically attaches the validation report to the **422 JSON response** (only when verbose mode is active).
+
+By default, only the **failed rules** are attached. You can change this via the `failure_report_type` config option.
+
+**Example failed response (default):**
+
+```json
+{
+  "message": "The given data was invalid.",
+  "errors": {
+    "password": [
+      "The password must be at least 8 characters."
+    ]
+  },
+  "verbose_report": {
+    "password": [
+      {
+        "rule": "Min",
+        "parameters": ["8"],
+        "value": "123",
+        "result": false
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Reports in Successful Validation
+
+When validation passes, you can still access the report inside your application logic:
+
+```php
+$report = $request->validator->getReport();
+```
+
+This will return the report based on the executed validation rules for that request.
+
+---
+
+## 🧩 Support for Custom Rules
+
+This package fully supports custom validation rules, both **Closure-based** and **Rule Objects**.
+The result of their execution will be logged in the report just like native Laravel rules.
+
+---
 
 ## 🧪 Testing
 
-The package is fully tested. To run the tests locally:
+Run tests locally:
 
 ```bash
 composer test
 ```
 
------
+---
 
 ## 🙌 Contributing
 
-Contributions are welcome\! Please feel free to submit a pull request or open an issue.
+Contributions are welcome! Please feel free to submit a pull request or open an issue.
 
------
+---
 
 ## 📄 License
 
